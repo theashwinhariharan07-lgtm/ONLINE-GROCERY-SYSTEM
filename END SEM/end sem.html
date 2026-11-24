@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshMart - Online Grocery Store</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f7f5;
+    color: #24352b;
+}
+
+header {
+    background: #18794e;
+    color: white;
+    padding: 18px 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+input {
+    padding: 13px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 280px;
+    max-width: 100%;
+}
+
+.hero {
+    background: #dff2e2;
+    text-align: center;
+    padding: 45px 20px;
+}
+
+.hero h2 {
+    font-size: 36px;
+    color: #18794e;
+}
+
+.categories {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 25px;
+}
+
+button {
+    background: #18794e;
+    color: white;
+    border: none;
+    padding: 11px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #105c39;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 22px;
+    padding: 25px 5%;
+}
+
+.product {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 4px 15px #0000000c;
+    transition: transform 0.2s;
+}
+
+.product:hover {
+    transform: translateY(-5px);
+}
+
+.product-image {
+    font-size: 75px;
+    background: #f3f7f3;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.price {
+    color: #18794e;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.stock {
+    color: green;
+    font-size: 13px;
+}
+
+#cart {
+    background: white;
+    margin: 25px 5%;
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #ddd;
+    padding: 12px 0;
+}
+
+footer {
+    text-align: center;
+    background: #163d2a;
+    color: white;
+    padding: 22px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛒 FreshMart</h1>
+    <input type="search" id="search"
+           placeholder="Search products...">
+    <button onclick="document.getElementById('cart').scrollIntoView()">
+        Cart (<span id="count">0</span>)
+    </button>
+</header>
+
+<section class="hero">
+    <h2>Fresh Groceries at Your Fingertips</h2>
+    <p>Discover fresh fruits, vegetables, dairy and daily essentials.</p>
+</section>
+
+<nav class="categories" id="categories"></nav>
+
+<section class="products" id="products"></section>
+
+<section id="cart">
+    <h2>Shopping Cart</h2>
+    <div id="cartItems"></div>
+    <h3>Total: ₹<span id="total">0</span></h3>
+    <button onclick="checkout()">Checkout</button>
+</section>
+
+<footer>
+    <p>FreshMart | Online Grocery Retail Store</p>
+    <small>Demonstration website — sample prices and stock.</small>
+</footer>
+
+<script>
+const products = [
+    {id:1, name:"Apple", category:"Fruits", price:120, unit:"1 kg", image:"🍎"},
+    {id:2, name:"Banana", category:"Fruits", price:50, unit:"1 dozen", image:"🍌"},
+    {id:3, name:"Tomato", category:"Vegetables", price:35, unit:"1 kg", image:"🍅"},
+    {id:4, name:"Carrot", category:"Vegetables", price:60, unit:"1 kg", image:"🥕"},
+    {id:5, name:"Milk", category:"Dairy", price:30, unit:"500 ml", image:"🥛"},
+    {id:6, name:"Paneer", category:"Dairy", price:90, unit:"200 g", image:"🧀"},
+    {id:7, name:"Rice", category:"Staples", price:110, unit:"1 kg", image:"🍚"},
+    {id:8, name:"Bread", category:"Bakery", price:45, unit:"400 g", image:"🍞"},
+    {id:9, name:"Potato", category:"Vegetables", price:40, unit:"1 kg", image:"🥔"},
+    {id:10, name:"Orange", category:"Fruits", price:80, unit:"1 kg", image:"🍊"}
+];
+
+let cart = {};
+let category = "All";
+
+const categories = [
+    "All", "Fruits", "Vegetables",
+    "Dairy", "Staples", "Bakery"
+];
+
+document.getElementById("categories").innerHTML =
+    categories.map(c =>
+        `<button onclick="filterCategory('${c}')">${c}</button>`
+    ).join("");
+
+function displayProducts() {
+    const search = document.getElementById("search")
+        .value.toLowerCase();
+
+    const filtered = products.filter(p =>
+        (category === "All" || p.category === category) &&
+        p.name.toLowerCase().includes(search)
+    );
+
+    document.getElementById("products").innerHTML =
+        filtered.map(p => `
+            <div class="product">
+                <div class="product-image">${p.image}</div>
+                <h3>${p.name}</h3>
+                <p>${p.category} | ${p.unit}</p>
+                <p class="stock">In Stock (Demo)</p>
+                <p class="price">₹${p.price}</p>
+                <button onclick="addToCart(${p.id})">
+                    Add to Cart
+                </button>
+            </div>
+        `).join("") || "<p>No products found.</p>";
+}
+
+function filterCategory(value) {
+    category = value;
+    displayProducts();
+}
+
+function addToCart(id) {
+    cart[id] = (cart[id] || 0) + 1;
+    updateCart();
+}
+
+function removeFromCart(id) {
+    if (cart[id] > 1) {
+        cart[id]--;
+    } else {
+        delete cart[id];
+    }
+    updateCart();
+}
+
+function updateCart() {
+    let total = 0;
+    let count = 0;
+
+    document.getElementById("cartItems").innerHTML =
+        Object.entries(cart).map(([id, quantity]) => {
+            const p = products.find(item => item.id == id);
+            total += p.price * quantity;
+            count += quantity;
+
+            return `
+                <div class="cart-item">
+                    <span>${p.image} ${p.name} × ${quantity}</span>
+                    <span>₹${p.price * quantity}</span>
+                    <button onclick="removeFromCart(${id})">
+                        Remove
+                    </button>
+                </div>
+            `;
+        }).join("") || "<p>Your cart is empty.</p>";
+
+    document.getElementById("total").textContent = total;
+    document.getElementById("count").textContent = count;
+}
+
+function checkout() {
+    if (Object.keys(cart).length === 0) {
+        alert("Your cart is empty!");
+        return;
+    }
+
+    alert("Demo checkout. No payment or real order is processed.");
+}
+
+document.getElementById("search")
+    .addEventListener("input", displayProducts);
+
+displayProducts();
+updateCart();
+</script>
+
+</body>
+</html>
